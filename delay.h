@@ -1,6 +1,3 @@
-#ifndef __DELAY_H_
-#define __DELAY_H_
-
 /* usuario deve definir as seguintes coisas: 
 	funcao para alimentar watchdog
 	void wdt_feed(void);
@@ -11,6 +8,9 @@
 	funcao que retorna o registrador do contador de microsegundos do timer de 32 bits
 	uint32_t get_microseconds(void){return LPC_TMR32B0->TC;}
 	*/
+
+/* If WDTEnabled == 0, _feed_dog may be NULL */
+void delay_init(uint8_t WDTEnabled, void (*_feed_dog)(void), uint64_t (*_get_stopwatch_counter)(void));
 
 typedef struct{
 	uint32_t TimeComp;
@@ -28,7 +28,7 @@ typedef struct{
 void stopwatch_start(STOPWATCH_ts * oStopWatch);
 void stopwatch_stop(STOPWATCH_ts * oStopWatch);
 
+/* This function must be called periodicaly */
 void delay_update(void);
-void delay_blocking(uint32_t TimeComp);
 
-#endif // __DELAY_H_
+void delay_blocking(uint32_t TimeComp);

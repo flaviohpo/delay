@@ -3,43 +3,64 @@
 
 #ifdef __DELAY_H_
 	
+	static uint8_t DelayWatchdogEnabled = 0;
+	static uint64_t DelayCounter = 0;
+
 	static void (*delay_feed_dog)(void);
-	static uint64_t (*delay_get_micros)(void);
-	static uint64_t (*delay_get_millis)(void);
+	static uint64_t (*delay_get_stopwatch_counter)(void);
 
-	/* TODO: fazer um ponteiro pra funcao q r eseta o watchdog e passar a funcao por parametro
-	 * em uma funcao delay_init(...)
-	 */
+	void delay_init(uint8_t WDTEnabled, void (*_feed_dog)(void), uint64_t (*_get_stopwatch_counter)(void))
+	{
+		delay_feed_dog = _feed_dog;
+		delay_get_stopwatch_counter = _get_stopwatch_counter;
 
-	static uint32_t Milliseconds = 0;
-
-	void delay_update(void){
-		Milliseconds++;
-	}
-
-	void delay_blocking(uint32_t TimeComp){
-		DELAY_ts oDelay;
-		delay_start(&oDelay, TimeComp);
-		while(!delay_check(&oDelay)){
-			//wdt_feed();
+		if(WDTEnabled != 0)
+		{
+			DelayWatchdogEnabled = 1;
+		}
+		else
+		{
+			DelayWatchdogEnabled = 0;
 		}
 	}
 
-	void delay_start(DELAY_ts * oDelay, uint32_t TimeComp){
-		oDelay->TimeStart = Milliseconds;
+	void delay_update(void)
+	{
+		DelayCounter++;
+	}
+
+	void delay_blocking(uint32_t TimeComp)
+	{
+		DELAY_ts oDelay;
+		delay_start(&oDelay, TimeComp);
+		while(!delay_check(&oDelay))
+		{
+			if(DelayWatchdogEnabled != 0)
+			{
+				delay_feed_dog();
+			}
+		}
+	}
+
+	void delay_start(DELAY_ts * oDelay, uint32_t TimeComp)
+	{
+		oDelay->TimeStart = DelayCounter;
 		oDelay->TimeComp = TimeComp;
 	}
 
-	uint8_t delay_check(DELAY_ts * oDelay){
-		return ((Milliseconds - oDelay->TimeStart) >= oDelay->TimeComp);
+	uint8_t delay_check(DELAY_ts * oDelay)
+	{
+		return ((DelayCounter - oDelay->TimeStart) >= oDelay->TimeComp);
 	}
 
-	void stopwatch_start(STOPWATCH_ts * oStopWatch){
-		oStopWatch->TimeStart = get_microseconds();
+	void stopwatch_start(STOPWATCH_ts * oStopWatch)
+	{
+		oStopWatch->TimeStart = delay_get_stopwatch_counter();
 	}
 	
-	void stopwatch_stop(STOPWATCH_ts * oStopWatch){
-		oStopWatch->Interval = get_microseconds() - oStopWatch->TimeStart;
+	void stopwatch_stop(STOPWATCH_ts * oStopWatch)
+	{
+		oStopWatch->Interval = delay_get_stopwatch_counter() - oStopWatch->TimeStart;
 	}
 	
 #endif
