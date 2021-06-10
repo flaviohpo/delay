@@ -9,6 +9,9 @@
 	uint32_t get_microseconds(void){return LPC_TMR32B0->TC;}
 	*/
 
+#ifndef __DELAY_H_
+#define __DELAY_H_
+
 /* If WDTEnabled == 0, _feed_dog may be NULL */
 void delay_init(uint8_t WDTEnabled, void (*_feed_dog)(void), uint64_t (*_get_stopwatch_counter)(void));
 
@@ -32,3 +35,5 @@ void stopwatch_stop(STOPWATCH_ts * oStopWatch);
 void delay_update(void);
 
 void delay_blocking(uint32_t TimeComp);
+
+#endif 

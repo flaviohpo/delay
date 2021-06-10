@@ -22,3 +22,5 @@ git merge {nome do branch}
 
 para mudar de branch
 git checkout {nome do branch}
+
+
